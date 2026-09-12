@@ -631,8 +631,7 @@ def test_schema_repair_receives_safe_specific_field_errors(
     assert result.validation_status == "repaired"
     assert "reading_decision.overall_value.score" in repair_prompt
     assert "必须是整数" in repair_prompt
-    assert "reading_decision.overall_value.paragraph_refs" in repair_prompt
-    assert "数组项目过多（最多 12 项）" in repair_prompt
+    assert "reading_decision.overall_value.paragraph_refs" not in repair_prompt
     assert "core_analysis.knowledge_points" in repair_prompt
     assert "数组项目过少" in repair_prompt
     assert "undocumented_field" in repair_prompt
@@ -660,6 +659,55 @@ def test_known_qwen_schema_variants_are_normalized_without_another_call(
     assert result.fluff_assessment.title_overstates_content == "否"
     assert result.core_analysis.counterarguments == []
     assert not hasattr(result.reading_decision, "paragraph_refs")
+
+
+def test_overlong_paragraph_refs_are_bounded_without_a_repair_call(
+    settings: ModelSettings,
+) -> None:
+    variant = valid_payload()
+    repeated_refs = [f"[P{(index % 5) + 1:02d}]" for index in range(20)]
+    variant["core_analysis"]["structure"][0]["paragraph_refs"] = repeated_refs
+    variant["core_analysis"]["knowledge_points"][0]["paragraph_refs"] = repeated_refs
+    variant["core_analysis"]["claims"][0]["paragraph_refs"] = repeated_refs
+    variant["explanations"][0]["paragraph_refs"] = repeated_refs
+    raw = json.dumps(variant, ensure_ascii=False)
+    client = FakeClient([raw])
+
+    with pytest.raises(AnalysisError):
+        parse_analysis(raw)
+
+    result = analyze_article(make_article(), settings, client_factory=lambda _: client)
+
+    assert len(client.calls) == 1
+    assert result.validation_status == "valid_with_auto_corrections"
+    assert result.core_analysis.structure[0].paragraph_refs == [
+        "[P01]",
+        "[P02]",
+        "[P03]",
+        "[P04]",
+        "[P05]",
+    ]
+    assert result.core_analysis.knowledge_points[0].paragraph_refs == [
+        "[P01]",
+        "[P02]",
+        "[P03]",
+        "[P04]",
+        "[P05]",
+    ]
+    assert result.core_analysis.claims[0].paragraph_refs == [
+        "[P01]",
+        "[P02]",
+        "[P03]",
+        "[P04]",
+        "[P05]",
+    ]
+    assert result.explanations[0].paragraph_refs == [
+        "[P01]",
+        "[P02]",
+        "[P03]",
+        "[P04]",
+        "[P05]",
+    ]
 
 
 def test_invalid_json_after_repair_has_clear_error(settings: ModelSettings) -> None:

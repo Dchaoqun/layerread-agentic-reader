@@ -519,13 +519,57 @@ def parse_analysis(raw_response: str) -> AnalysisPayload:
     return payload
 
 
+def _bound_overlong_paragraph_refs(
+    value: Any,
+    path: tuple[str | int, ...] = (),
+) -> list[str]:
+    """Bound provider-generated reference arrays before strict validation.
+
+    Some OpenAI-compatible providers repeat otherwise valid paragraph IDs even
+    after a repair request.  De-duplicating and bounding an overlong reference
+    list does not invent evidence or alter the associated analysis text.
+    """
+
+    corrections: list[str] = []
+    if isinstance(value, dict):
+        for key, child in value.items():
+            child_path = (*path, key)
+            if key == "paragraph_refs" and isinstance(child, list):
+                max_references = (
+                    64
+                    if path[:2] == ("core_analysis", "structure")
+                    else 12
+                )
+                if len(child) <= max_references:
+                    continue
+                bounded: list[Any] = []
+                for reference in child:
+                    if reference not in bounded:
+                        bounded.append(reference)
+                    if len(bounded) == max_references:
+                        break
+                value[key] = bounded
+                location = ".".join(str(part) for part in child_path)
+                corrections.append(f"bounded overlong {location}")
+            else:
+                corrections.extend(
+                    _bound_overlong_paragraph_refs(child, child_path)
+                )
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            corrections.extend(
+                _bound_overlong_paragraph_refs(child, (*path, index))
+            )
+    return corrections
+
+
 def _normalize_known_schema_variants(value: Any) -> tuple[Any, tuple[str, ...]]:
-    """Normalize only lossless, explicitly documented provider variants."""
+    """Normalize explicitly documented, locally safe provider variants."""
 
     if not isinstance(value, dict):
         return value, ()
     normalized = deepcopy(value)
-    corrections: list[str] = []
+    corrections = _bound_overlong_paragraph_refs(normalized)
     reading_decision = normalized.get("reading_decision")
     if isinstance(reading_decision, dict) and "paragraph_refs" in reading_decision:
         reading_decision.pop("paragraph_refs")
