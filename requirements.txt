@@ -1,5 +1,5 @@
 httpx>=0.28,<1
-openai>=2,<3
+openai>=2,<4
 pillow>=11,<13
 pydantic>=2,<3
 python-dotenv>=1,<2
