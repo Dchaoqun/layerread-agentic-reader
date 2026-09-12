@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LayerRead Connector 设置</title>
+    <style>
+      body { color: #172033; font: 15px/1.55 system-ui, sans-serif; margin: 2rem auto; max-width: 640px; padding: 0 1rem; }
+      fieldset { border: 1px solid #d8dee9; border-radius: 10px; padding: 1rem 1.2rem; }
+      label { display: block; margin: 0.75rem 0; }
+      button { background: #315efb; border: 0; border-radius: 8px; color: white; cursor: pointer; padding: 0.65rem 1rem; }
+      .muted { color: #5f6b7a; }
+      #status { min-height: 1.5rem; }
+    </style>
+  </head>
+  <body>
+    <h1>LayerRead Connector 设置</h1>
+    <p class="muted">选择点击扩展图标后打开的 LayerRead。文章只会发送到你选择的目标。</p>
+    <fieldset>
+      <legend>发送目标</legend>
+      <label><input type="radio" name="target" value="demo" id="target-demo" /> 在线 Demo</label>
+      <p class="muted" id="demo-origin"></p>
+      <label><input type="radio" name="target" value="local" /> 本地应用（http://localhost:8501）</label>
+    </fieldset>
+    <p><button id="save" type="button">保存设置</button></p>
+    <p id="status" role="status"></p>
+    <script src="config.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+[project]
+name = "layerread"
+version = "0.8.0.dev0"
+description = "An agentic reading workflow with evidence checks and active learning."
+readme = "README.md"
+license = "AGPL-3.0-only"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.28,<1",
+    "openai>=2,<3",
+    "pillow>=11,<13",
+    "psycopg[binary]>=3.2,<4",
+    "pydantic>=2,<3",
+    "python-dotenv>=1,<2",
+    "streamlit>=1.57,<2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<10",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -p no:cacheprovider"
+pythonpath = ["."]

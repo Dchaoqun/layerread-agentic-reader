@@ -1,0 +1,32 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+venv/
+.packages/
+.uv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.test_tmp/
+.mypy_cache/
+.ruff_cache/
+
+# Local application data
+data/
+logs/
+*.db
+*.sqlite
+*.sqlite3
+
+# Local v0.7 acceptance materials may contain copyrighted/private articles
+tests/fixtures/v07_articles/local/
+
+# IDE and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
